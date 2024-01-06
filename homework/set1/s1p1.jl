@@ -16,6 +16,7 @@ m = Model(GLPK.Optimizer)
 # x11: 93 + 4*42
 # x12: 7*42
 
+# remove Int optional positional argument for non-integer results
 @variable(m, x[1:12] >= 0, Int)
 
 @objective(m, Min, sum(x))
