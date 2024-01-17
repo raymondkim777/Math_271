@@ -16,7 +16,28 @@ A = hcat(xdata,ones(length(xdata)));
 slope, intercept = A \ ydata;
 
 # Here we plot the least squares line.
-plot!(x -> slope*x + intercept,0,1,label="least squares line")
-println("done")
+plot!(x -> slope*x + intercept, 0, 1, label="least squares line")
 
 # Add your code to compute and plot a best fit line in the sense of absolute deviation.
+
+using JuMP, GLPK
+
+m = Model(GLPK.Optimizer)
+
+@variable(m, e[i = 1:12])
+@variable(m, a)
+@variable(m, b)
+
+@objective(m, Min, sum(e))
+
+A = [a -1]
+
+@constraint(m, [i = 1:12], e[i] >= a*xdata[i] + b - ydata[i])
+@constraint(m, [i = 1:12], e[i] >= -(a*xdata[i] + b - ydata[i]))
+
+print(m)
+
+JuMP.optimize!(m)
+
+println("line: y = ", value(a), "x + ", value(b))
+plot!(x -> value(a)*x + value(b), 0, 1, label="1-norm residual line")
