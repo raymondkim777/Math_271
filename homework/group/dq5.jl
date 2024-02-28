@@ -1,9 +1,9 @@
 using LinearAlgebra
 
-A = [-2 1 1 0 0 ; 1 -2 0 1 0; 1 1 0 0 1]
-b = [4, 2, 10]
-c = [2, 3, 0, 0, 0]
-B = [3, 4, 5]
+A = [1 0 0 -2 -9 1 9; 0 1 0 1/3 1 -1/3 -2; 0 0 1 2 3 -1 -12]
+b = [0; 0; 2]
+c = [0; 0; 0; 2; 3; -1; -12]
+B = [1, 2, 3]
 
 # check B is basis
 if size(B)[1] > size(A)[2]
@@ -15,9 +15,11 @@ else
     while true
         # calculating tableau
         n = size(A)[2]
-        Q = -inv(A[:, B]) * A[:, setdiff(1:n, B)]
+        N = setdiff(1:n, B)
+        
+        Q = -inv(A[:, B]) * A[:, N]
         p = inv(A[:, B]) * b
-        r = c[setdiff(1:n, B)] - transpose(transpose(c[B]) * inv(A[:, B]) * A[:, setdiff(1:n, B)])
+        r = c[N] - transpose(transpose(c[B]) * inv(A[:, B]) * A[:, N])
         z0 = transpose(c[B]) * inv(A[:, B]) * b
         
         # printing tableau
@@ -34,7 +36,7 @@ else
         x_b = parse(Int64, readline()) 
 
         # check for erronious input
-        if size(findall(x->x == x_n, setdiff(1:n, B)))[1] == 0 || size(findall(x->x == x_b, B))[1] == 0
+        if x_n in B || !(x_b in B)
             println("Erronious input for x_n or x_b")
             exit()
         end
