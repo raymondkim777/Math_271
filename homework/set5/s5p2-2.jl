@@ -39,13 +39,20 @@ else
         println("r = ", r)
         
         # choosing pivot
-
+        
+        optimum_found = 1
         # entering
-        maxval_n, idx_n = findmax(r)
-        x_n = setdiff(1:n, B)[idx_n]
-
+        x_n = -1
+        for idx_n in 1:size(r)[1]
+            if r[idx_n] > 0
+                x_n = setdiff(1:n, B)[idx_n]
+                optimum_found = 0
+                break
+            end
+        end
+        
         # (if optimum found)
-        if maxval_n <= 0
+        if optimum_found == 1
             x = Array{Float64}(undef, 0)
             for i in eachindex(view(A, 1, :))
                 if i in B
