@@ -105,9 +105,11 @@ println("time: ", vcat([0], T_all[1][2], [i for i in T_l[1][2] + 1: T_l[1][2] + 
 
 # Constraints
 
+# additional constraints (planes have to takeoff & land)
 @constraint(m, c0_0[f in F], w[f, P[f][1], d[f] - 1] == 0)
 @constraint(m, c0_1[f in F], w[f, P[f][N[f]], r[f]] == 1)
 
+# given model constraints
 @constraint(m, c1[k in K, t in T], sum(vcat([0], [
     (w[f, k, t] - w[f, k, t - 1])
     for f in F if P[f][1] == k
