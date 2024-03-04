@@ -29,10 +29,8 @@ c_a = Vector{Float64}()  # cost of air holds c_a[f] = Float64
 # for sake of simplicity, T_all will cover all values of t for now
 T_f = Vector{Dict{Int64, Int64}}()  # first time for f to arrive at j T_f[f][j] = Int64
 T_l = Vector{Dict{Int64, Int64}}()  # last time for f to arrive at j T_f[f][j] = Int64
-T_all = Vector{Dict{Int64, Vector{Int64}}}()  # all times for f to arrive at j T_all[f][j] = Array{Int64}
+T_all = Vector{Dict{Int64, Vector{Int64}}}()  # all times for f to arrive at j T_all[f][j] = Vector{Int64}
 T = [i for i in 1:t_max]
-
-padding = 50
 
 
 # Manual Entry of Data
@@ -55,12 +53,14 @@ end
 
 push!(d, 10)
 push!(d, 15)
-push!(r, 25)
-push!(r, 28)
+push!(r, 35)
+push!(r, 38)
+push!(s, 0)
+push!(s, 0)
 
 for f in F
     push!(c_g, 5)
-    push!(c_a, 15)
+    push!(c_a, 17)
 end
 
 for f in F
@@ -75,15 +75,19 @@ for f in F
 
     temp3 = Dict{Int64, Vector{Int64}}()
     for j in J
-        temp3[j] = [i for i in (T_f[f][j]): T_l[f][j]] 
+        temp3[j] = [i for i in T_f[f][j]: T_l[f][j]] 
     end
     push!(T_all, temp3)
 end
 
+padding = maximum([maximum(values(l[f])) for f in F])
+
 # Declaring decision variables
 @variable(m, w[f in F, j in P[f], t in vcat(
-    [0], T_all[f][j], [i for i in maximum(T_all[f][j]) + 1: maximum(T_all[f][j]) + padding]
+    [0], T_all[f][j], [i for i in T_l[f][j] + 1: T_l[f][j] + padding]
 )], Bin)
+
+println("time: ", vcat([0], T_all[1][2], [i for i in T_l[1][2] + 1: T_l[1][2] + padding]))
 
 # Objective
 @objective(m, Min, sum([
@@ -100,7 +104,9 @@ end
 ]))
 
 # Constraints
-@constraint(m, c0[f in F, j in P[f]], w[f, j, 0] == 0)
+
+@constraint(m, c0_0[f in F], w[f, P[f][1], d[f] - 1] == 0)
+@constraint(m, c0_1[f in F], w[f, P[f][N[f]], r[f]] == 1)
 
 @constraint(m, c1[k in K, t in T], sum(vcat([0], [
     (w[f, k, t] - w[f, k, t - 1])
@@ -113,19 +119,17 @@ end
 ])) <= A[k][t])
 
 @constraint(m, c3[j in J, t in T], sum(vcat([0], [
-    (w[f, j, t] - w[f, jp, t])
-    for f in F for jp in J for i in 1:(N[f] - 1) if (
-        P[f][i] == j && jp == P[f][i + 1]
-    )
+    (w[f, j, t] - w[f, P[f][i + 1], t])
+    for f in F for i in 1:(N[f] - 1) if P[f][i] == j
 ])) <= S[j][t])
 
 @constraint(m, c4[
-    f in F, i in 1:(N[f] - 1), j = P[f][i], jp = P[f][i + 1], t in T_all[f][j]
-], w[f, jp, t + l[f][j]] - w[f, j, t] <= 0)
+    f in F, i in 1:(N[f] - 1), t in T_all[f][P[f][i]]
+], w[f, P[f][i + 1], t + l[f][P[f][i]]] - w[f, P[f][i], t] <= 0)
 
 @constraint(m, c5[
-    (fp, f) in C, k = P[f][1], t in T_all[f][k]
-], w[f, k, t] - w[fp, k, t - s[fp]] <= 0)
+    (fp, f) in C, t in T_all[f][P[f][1]]
+], w[f, P[f][1], t] - w[fp, P[f][1], t - s[fp]] <= 0)
 
 @constraint(m, c6[
     f in F, j in P[f], t in T_all[f][j]
@@ -135,13 +139,11 @@ end
 # Printing Model
 f = open("model.lp", "w")
 print(f, m)
-close(f)
 
 # Solving LP
 JuMP.optimize!(m)
 
-println("Objective value: ", objective_value(m))
-# println("Optimal solutions:")
-# println("w[] = ", value.(w))
-
-
+println(f, "Objective value: ", objective_value(m))
+println(f, "Optimal solutions:")
+println(f, "w[] = \n", value.(w))
+close(f)
