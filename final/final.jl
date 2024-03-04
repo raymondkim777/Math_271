@@ -87,8 +87,6 @@ padding = maximum([maximum(values(l[f])) for f in F])
     [0], T_all[f][j], [i for i in T_l[f][j] + 1: T_l[f][j] + padding]
 )], Bin)
 
-println("time: ", vcat([0], T_all[1][2], [i for i in T_l[1][2] + 1: T_l[1][2] + padding]))
-
 # Objective
 @objective(m, Min, sum([
     (
@@ -139,13 +137,47 @@ println("time: ", vcat([0], T_all[1][2], [i for i in T_l[1][2] + 1: T_l[1][2] + 
 
 
 # Printing Model
-f = open("model.lp", "w")
-print(f, m)
+file = open("model.lp", "w")
+print(file, m)
 
 # Solving LP
 JuMP.optimize!(m)
 
-println(f, "Objective value: ", objective_value(m))
-println(f, "Optimal solutions:")
-println(f, "w[] = \n", value.(w))
-close(f)
+# Printing Model to File
+
+println(file, "Objective value: ", objective_value(m))
+println(file, "Optimal solutions:")
+println(file, "w[] = \n", value.(w))
+
+# Printing Flight Paths in stdout
+
+path = Vector{Dict{Int64, Int64}}()  # path[f][sec] = time
+for f in F
+    temp = Dict{Int64, Int64}()
+    for sec in P[f]
+        for t in T_all[f][sec]
+            if value(w[f, sec, t]) == 1
+                temp[sec] = t
+                break
+            end
+        end
+    end
+    push!(path, temp)
+end
+
+println(file, "\nOptimization Results:\n")
+for f in F
+    println(file, "Flight ", f, " Path:")
+    for sec in P[f]
+        print(file, "\t")
+        if sec in K
+            print(file, "Airport ")
+        else
+            print(file, "Sector ")
+        end
+        println(file, sec, ": t = ", path[f][sec])
+    end
+    println(file)
+end
+
+close(file)
