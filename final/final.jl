@@ -1,3 +1,14 @@
+#= 
+Usage Guide
+
+Input model parameters & data.
+Run Julia code.
+
+Model output prints to "model.lp"
+Results print to "results.lp"
+=#
+
+
 # Declaring packages
 using JuMP, GLPK
 
@@ -137,21 +148,22 @@ padding = maximum([maximum(values(l[f])) for f in F])
 
 
 # Printing Model
-file = open("model.lp", "w")
-print(file, m)
+file1 = open("model.lp", "w")
+print(file1, m)
 
 # Solving LP
 JuMP.optimize!(m)
 
 # Printing Model to File
-
-println(file, "Objective value: ", objective_value(m))
-println(file, "Optimal solutions:")
-println(file, "w[] = \n", value.(w))
+println(file1, "Objective value: ", objective_value(m))
+println(file1, "Optimal solutions:")
+println(file1, "w[] = \n", value.(w))
+close(file1)
 
 # Printing Flight Paths in stdout
-
+file2 = open("results.lp", "w")
 path = Vector{Dict{Int64, Int64}}()  # path[f][sec] = time
+
 for f in F
     temp = Dict{Int64, Int64}()
     for sec in P[f]
@@ -165,19 +177,18 @@ for f in F
     push!(path, temp)
 end
 
-println(file, "\nOptimization Results:\n")
+println(file2, "Optimization Results:\n")
 for f in F
-    println(file, "Flight ", f, " Path:")
+    println(file2, "Flight ", f, " Path:")
     for sec in P[f]
-        print(file, "\t")
+        print(file2, "\t")
         if sec in K
-            print(file, "Airport ")
+            print(file2, "Airport ")
         else
-            print(file, "Sector ")
+            print(file2, "Sector ")
         end
-        println(file, sec, ": t = ", path[f][sec])
+        println(file2, sec, ": t = ", path[f][sec])
     end
-    println(file)
+    println(file2)
 end
-
-close(file)
+close(file2)
