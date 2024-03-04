@@ -160,7 +160,7 @@ println(file1, "Optimal solutions:")
 println(file1, "w[] = \n", value.(w))
 close(file1)
 
-# Printing Flight Paths in stdout
+# Printing Flight Paths to File
 file2 = open("results.lp", "w")
 path = Vector{Dict{Int64, Int64}}()  # path[f][sec] = time
 
