@@ -17,18 +17,18 @@ pdp =[Q[:,i]'*Q[:,i] for i = 1:n];  # list of dot products p_j^T p_j.
 model = Model(HiGHS.Optimizer)
 
 # Declaring variables
-@variable(model, x[1:n] >= 0);
+@variable(model, x[1:n] >= 0)
 
 # Define your objective
 @objective(model, Min, x' * Q' * Q * x - sum([
     (x[j] * pdp[j]) for j in 1:n
-]));
+]))
 
 # Define your constraint
-@constraint(model, c1, sum(x) == 1);
+@constraint(model, c1, sum(x) == 1)
 
 # Optimize your model
-optimize!(model);
+optimize!(model)
 
 # Access the values of the decision variables and objective
 xstar = value.(x)
@@ -37,8 +37,8 @@ opt = objective_value(model)
 
 # This is template code for plotting your points and a circle that will (hopefully) enclose them.
 t = range(0,stop=2*π,length=100)
-rad = .3
-cen = [0.5,0.5]
+rad = sqrt(-opt)
+cen = Q * xstar
 xc1 = cen[1] .+ rad*cos.(t)
 xc2 = cen[2] .+ rad*sin.(t)
 
