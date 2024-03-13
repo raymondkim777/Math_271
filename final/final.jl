@@ -118,7 +118,7 @@ padding = delay_padding + maximum([maximum(values(l[f])) for f in F])
 
 # additional constraints (planes have to takeoff & land)
 @constraint(m, c0_0[f in F], w[f, P[f][1], d[f] - 1] == 0)
-@constraint(m, c0_1[f in F], w[f, P[f][N[f]], r[f]] == 1)
+@constraint(m, c0_1[f in F], w[f, P[f][N[f]], r[f] + delay_padding] == 1)
 
 # given model constraints
 @constraint(m, c1[k in K, t in T], sum(vcat([0], [
