@@ -41,7 +41,7 @@ c_a = Vector{Float64}()  # cost of air holds c_a[f] = Float64
 T_f = Vector{Dict{Int64, Int64}}()  # first time for f to arrive at j T_f[f][j] = Int64
 T_l = Vector{Dict{Int64, Int64}}()  # last time for f to arrive at j T_f[f][j] = Int64
 T_all = Vector{Dict{Int64, Vector{Int64}}}()  # all times for f to arrive at j T_all[f][j] = Vector{Int64}
-T = [i for i in 1:t_max]
+T = [i for i = 1:t_max]
 
 
 # Manual Entry of Data
@@ -55,11 +55,11 @@ push!(l, sect_times)
 push!(l, sect_times)
 
 for k in K
-    D[k] = [1 for i in 1:t_max]
-    A[k] = [1 for i in 1:t_max]
+    D[k] = [1 for i = 1:t_max]
+    A[k] = [1 for i = 1:t_max]
 end
 for j in J
-    S[j] = [1 for i in 1:t_max]
+    S[j] = [1 for i = 1:t_max]
 end
 
 push!(d, 10)
@@ -86,7 +86,7 @@ for f in F
 
     temp3 = Dict{Int64, Vector{Int64}}()
     for j in J
-        temp3[j] = [i for i in T_f[f][j]: T_l[f][j]] 
+        temp3[j] = [i for i = T_f[f][j]: T_l[f][j]] 
     end
     push!(T_all, temp3)
 end
@@ -95,7 +95,7 @@ padding = maximum([maximum(values(l[f])) for f in F])
 
 # Declaring decision variables
 @variable(m, w[f in F, j in P[f], t in vcat(
-    [0], T_all[f][j], [i for i in T_l[f][j] + 1: T_l[f][j] + padding]
+    [0], T_all[f][j], [i for i = T_l[f][j] + 1: T_l[f][j] + padding]
 )], Bin)
 
 # Objective
@@ -131,11 +131,11 @@ padding = maximum([maximum(values(l[f])) for f in F])
 
 @constraint(m, c3[j in J, t in T], sum(vcat([0], [
     (w[f, j, t] - w[f, P[f][i + 1], t])
-    for f in F for i in 1:(N[f] - 1) if P[f][i] == j
+    for f in F for i = 1:(N[f] - 1) if P[f][i] == j
 ])) <= S[j][t])
 
 @constraint(m, c4[
-    f in F, i in 1:(N[f] - 1), t in T_all[f][P[f][i]]
+    f in F, i = 1:(N[f] - 1), t in T_all[f][P[f][i]]
 ], w[f, P[f][i + 1], t + l[f][P[f][i]]] - w[f, P[f][i], t] <= 0)
 
 @constraint(m, c5[
